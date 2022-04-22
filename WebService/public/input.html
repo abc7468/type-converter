@@ -24,10 +24,10 @@
         $(function() {
             $('#sendBtn').on("click", function(event) {
                 var body = $('#data').val();
-                var server = $('#format').val();
+                var format = $('#format').val();
                 var data = {
                     body: body,
-                    server: server
+                    format: format
                 };
                 fetch("/send", {
                     method: 'POST',

@@ -1,6 +1,6 @@
-package model
+package data
 
 type Data struct {
 	Body   string `json:"body"`
-	Server string `json:"server"`
+	Format string `json:"format"`
 }
