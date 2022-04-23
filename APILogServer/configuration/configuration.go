@@ -8,7 +8,7 @@ import (
 
 func KafKaConsumer() *kafka.Consumer {
 	cfg := &kafka.ConfigMap{
-		"bootstrap.servers": "172.24.25.218:29092",
+		"bootstrap.servers": "172.17.170.151:29092",
 		"group.id":          "myGroup",
 		"auto.offset.reset": "earliest",
 	}

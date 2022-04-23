@@ -20,11 +20,10 @@ func (c *Consumer) Consume() {
 		if err == nil {
 			d := data.Data{}
 			utils.FromBytes(&d, msg.Value)
-			fmt.Printf("Message on %s: %v\n", msg.TopicPartition, msg.Value)
-			fmt.Println()
-			fmt.Println()
-			fmt.Println()
-			fmt.Println(d)
+			fmt.Println(string(msg.Value))
+
+			d.MakeProductInfo()
+
 		} else {
 			// The client will automatically try to recover from all errors.
 			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
