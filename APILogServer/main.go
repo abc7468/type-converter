@@ -52,7 +52,7 @@ func setConsumer() *mq.ApiDataConsumer {
 		"auto.offset.reset": configuration.Conf.Kafka.AutoOffsetReset,
 	}
 	c := &mq.ApiDataConsumer{
-		Consumer: configuration.KafKaConsumer(cfg),
+		Consumer: mq.KafKaConsumer(cfg),
 	}
 	return c
 }

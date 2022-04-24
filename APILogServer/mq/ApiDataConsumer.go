@@ -29,6 +29,10 @@ func (ac *ApiDataConsumer) Consume() {
 		}
 	}
 }
+func KafKaConsumer(cfg *kafka.ConfigMap) *kafka.Consumer {
+	consumer := APIDataConsumer(cfg)
+	return consumer
+}
 
 func APIDataConsumer(cfg *kafka.ConfigMap) *kafka.Consumer {
 	consumer, err := kafka.NewConsumer(cfg)
