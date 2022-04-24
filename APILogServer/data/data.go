@@ -2,8 +2,11 @@ package data
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
+	"sixshop/apilog/utils"
+	"strings"
+
+	"github.com/clbanning/mxj/v2"
 )
 
 type Data struct {
@@ -13,13 +16,18 @@ type Data struct {
 	productInfo Product
 }
 
-func (d *Data) MakeProductInfo() {
-	d.makeResult()
+func (d *Data) MakeData() {
+	d.toMap()
 
 }
 
-func (d *Data) makeResult() error {
+// func (d *Data) makeProductInfo() error {
+
+// }
+
+func (d *Data) toMap() error {
 	var result interface{}
+
 	switch d.Format {
 	case "json":
 		err := json.Unmarshal([]byte(d.Body), &result)
@@ -27,14 +35,32 @@ func (d *Data) makeResult() error {
 			return err
 		}
 		d.Original = result.(map[string]interface{})
-		fmt.Println(d.Original["id"])
-	case "byte":
+		fmt.Println(d.Original)
 
-	case "xml":
-		err := xml.Unmarshal([]byte(d.Body), &result)
+	case "byte":
+		byteString := strings.Split(d.Body, " ")
+		bytes := make([]byte, len(byteString))
+		for i, s := range byteString {
+			bytes[i] = uint8(utils.StringToInt(s))
+		}
+		err := json.Unmarshal(bytes, &result)
 		if err != nil {
 			return err
 		}
+		d.Original = result.(map[string]interface{})
+		fmt.Println(d.Original)
+
+	case "xml":
+		mv, err := mxj.NewMapXml([]byte(d.Body))
+		if err != nil {
+			return err
+		}
+		d.Original = mv
+		fmt.Println(d.Original)
+
+	default:
+		fmt.Println(d.Format)
+
 	}
 
 	return nil

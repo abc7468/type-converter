@@ -1,0 +1,9 @@
+field:
+  product: ["prod", "product"]
+  ids: ["id", "pId", "productId"]
+  names: ["name", "pName", "productName"]
+  prices: ["price", "pPrice", "productPrice"]
+kafka:
+  bootstrapservers: "broker:29092"
+  groupid:          "myGroup"
+  autooffsetreset: "earliest"

@@ -5,3 +5,9 @@ type Product struct {
 	Name  string `json:"name"`
 	Price string `json:"price"`
 }
+
+type ProductFieldList struct {
+	Ids    []string `yaml:"ids"`
+	Names  []string `yaml:"names"`
+	Prices []string `yaml:"prices"`
+}

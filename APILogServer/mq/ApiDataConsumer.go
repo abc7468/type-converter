@@ -1,4 +1,4 @@
-package kafkasvc
+package mq
 
 import (
 	"fmt"
@@ -8,21 +8,20 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
-type Consumer struct {
+type ApiDataConsumer struct {
 	Consumer *kafka.Consumer
 }
 
-func (c *Consumer) Consume() {
+func (ac *ApiDataConsumer) Consume() {
 	topic := "myTopic"
-	c.Consumer.SubscribeTopics([]string{topic}, nil)
+	ac.Consumer.SubscribeTopics([]string{topic}, nil)
 	for {
-		msg, err := c.Consumer.ReadMessage(-1)
+		msg, err := ac.Consumer.ReadMessage(-1)
 		if err == nil {
 			d := data.Data{}
 			utils.FromBytes(&d, msg.Value)
-			fmt.Println(string(msg.Value))
 
-			d.MakeProductInfo()
+			d.MakeData()
 
 		} else {
 			// The client will automatically try to recover from all errors.
