@@ -2,10 +2,10 @@ package data
 
 import (
 	"encoding/json"
-	"fmt"
 	"sixshop/apilog/configuration"
 	"sixshop/apilog/utils"
 	"strings"
+	"time"
 
 	"github.com/clbanning/mxj/v2"
 )
@@ -14,7 +14,9 @@ type Data struct {
 	Body        string `json:"body"`
 	Format      string `json:"format"`
 	Original    map[string]interface{}
+	Json        string
 	ProductInfo ProductInfo
+	Time        time.Time
 }
 
 func (d *Data) MakeData() error {
@@ -26,6 +28,7 @@ func (d *Data) MakeData() error {
 	if err != nil {
 		return err
 	}
+	d.Time = time.Now()
 	return nil
 }
 
@@ -62,7 +65,6 @@ func (d *Data) makeProductInfo() error {
 			break
 		}
 	}
-	fmt.Println(d.ProductInfo)
 	return nil
 }
 
@@ -76,7 +78,6 @@ func (d *Data) toMap() error {
 			return err
 		}
 		d.Original = result.(map[string]interface{})
-		fmt.Println(d.Original)
 
 	case "byte":
 		byteString := strings.Split(d.Body, " ")
@@ -89,7 +90,6 @@ func (d *Data) toMap() error {
 			return err
 		}
 		d.Original = result.(map[string]interface{})
-		fmt.Println(d.Original)
 
 	case "xml":
 		mv, err := mxj.NewMapXml([]byte(d.Body))
@@ -97,12 +97,9 @@ func (d *Data) toMap() error {
 			return err
 		}
 		d.Original = mv
-		fmt.Println(d.Original)
-
-	default:
-		fmt.Println(d.Format)
 
 	}
-
+	jsonData, _ := json.Marshal(d.Original)
+	d.Json = string(jsonData)
 	return nil
 }

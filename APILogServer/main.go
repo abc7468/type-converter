@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sixshop/apilog/configuration"
 	"sixshop/apilog/consumer"
+	"sixshop/apilog/db"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -58,8 +59,9 @@ func setConsumer() *consumer.ApiDataConsumer {
 }
 
 func main() {
-	profile := "kafka"
+	profile := "conf"
 	setConf(profile)
+	db.InitDB()
 	consumer := setConsumer()
 	consumer.Consume()
 }

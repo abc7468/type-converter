@@ -8,6 +8,7 @@ require (
 	github.com/clbanning/mxj/v2 v2.5.5
 	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.3
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/spf13/viper v1.11.0

@@ -3,7 +3,16 @@ field:
   ids: ["id", "pId", "productId"]
   names: ["name", "pName", "productName"]
   prices: ["price", "pPrice", "productPrice"]
+  
 kafka:
   bootstrapservers: "broker:29092"
   groupid:          "myGroup"
   autooffsetreset: "earliest"
+  maxBufSize: 10
+
+mysql:
+  host: "mysql"
+  name: "api"
+  port: "3306"
+  user: "user"
+  password: "7468"

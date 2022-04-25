@@ -1,102 +1,126 @@
 package consumer
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
+	"sixshop/apilog/configuration"
 	"sixshop/apilog/data"
+	"sixshop/apilog/db"
 	"sixshop/apilog/utils"
+	"strings"
+	"sync"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
-type ConsumerGroupHandler interface {
-	sarama.ConsumerGroupHandler
-	WaitReady()
-	Reset()
+type ApiDataConsumer struct {
+	Consumer *kafka.Consumer
+	ticker   *time.Ticker
+	c        chan data.Data
+	mu       sync.RWMutex
+	msgBuf   []*data.Data
 }
 
-type ConsumerGroup struct {
-	cg sarama.ConsumerGroup
-}
+func bulkInsert(datas []*data.Data) error {
+	db := db.DB.D
+	var (
+		placeholders []string
+		vals         []interface{}
+	)
 
-func NewConsumerGroup(broker string, topics []string, group string, handler ConsumerGroupHandler) (*ConsumerGroup, error) {
-	ctx := context.Background()
-	cfg := sarama.NewConfig()
-	cfg.Version = sarama.V0_10_2_0
-	cfg.Consumer.Offsets.Initial = sarama.OffsetOldest
-	client, err := sarama.NewConsumerGroup([]string{broker}, group, cfg)
-	if err != nil {
-		panic(err)
+	for _, data := range datas {
+		placeholders = append(placeholders, fmt.Sprintf("(?,?,?,?,?,?)"))
+		vals = append(vals, data.ProductInfo.Id, data.ProductInfo.Name, data.ProductInfo.Price, data.Body, data.Json, data.Time)
 	}
 
-	go func() {
-		for {
-			err := client.Consume(ctx, topics, handler)
-			if err != nil {
-				if err == sarama.ErrClosedConsumerGroup {
-					break
-				} else {
-					panic(err)
-				}
-			}
-			if ctx.Err() != nil {
-				return
-			}
-			handler.Reset()
-		}
-	}()
-
-	handler.WaitReady() // Await till the consumer has been set up
-
-	return &ConsumerGroup{
-		cg: client,
-	}, nil
-}
-
-func (c *ConsumerGroup) Close() error {
-	return c.cg.Close()
-}
-
-type ConsumerSessionMessage struct {
-	Session sarama.ConsumerGroupSession
-	Message *sarama.ConsumerMessage
-}
-
-func decodeMessage(msg []byte) error {
-	d := data.Data{}
-	utils.FromBytes(&d, msg)
-	err := json.Unmarshal(msg, &d)
+	txn, err := db.Begin()
 	if err != nil {
+		fmt.Println(err)
+
 		return err
 	}
+
+	insertStatement := fmt.Sprintf("INSERT INTO api_info (product_id, product_name, product_price, original_api, json_api, send_time) VALUES %s", strings.Join(placeholders, ","))
+	_, err = txn.Exec(insertStatement, vals...)
+	if err != nil {
+		txn.Rollback()
+		fmt.Println(err)
+		return err
+	}
+
+	if err := txn.Commit(); err != nil {
+		fmt.Println(err)
+
+		return err
+	}
+
 	return nil
 }
 
-func StartBatchConsumer(broker, topic string) (*ConsumerGroup, error) {
-	var count int64
-	var start = time.Now()
+func (ac *ApiDataConsumer) flushBuffer() {
+	fmt.Println("flush")
 
-	handler := NewBatchConsumerGroupHandler(&BatchConsumerConfig{
-		MaxBufSize: 10,
-		Callback: func(messages []*ConsumerSessionMessage) error {
-			for i := range messages {
-				if err := decodeMessage(messages[i].Message.Value); err == nil {
-					messages[i].Session.MarkMessage(messages[i].Message, "")
-				}
-			}
-			count += int64(len(messages))
-			if count%5000 == 0 {
-				fmt.Printf("batch consumer consumed %d messages at speed %.2f/s\n", count, float64(count)/time.Since(start).Seconds())
-			}
-			return nil
-		},
-	})
-	consumer, err := NewConsumerGroup(broker, []string{topic}, "batch-consumer-"+fmt.Sprintf("%d", time.Now().Unix()), handler)
-	if err != nil {
-		return nil, err
+	if len(ac.msgBuf) > 0 {
+		bulkInsert(ac.msgBuf)
+		ac.msgBuf = make([]*data.Data, 0, configuration.Conf.Kafka.MaxBufSize)
 	}
+}
 
-	return consumer, nil
+func (ac *ApiDataConsumer) insertMessage(msg *data.Data) {
+	ac.mu.Lock()
+	defer ac.mu.Unlock()
+	ac.msgBuf = append(ac.msgBuf, msg)
+	if len(ac.msgBuf) >= configuration.Conf.Kafka.MaxBufSize {
+		ac.flushBuffer()
+	}
+}
+
+func (ac *ApiDataConsumer) Consume() {
+	topic := "api"
+	ac.c = make(chan data.Data, 0)
+	ac.ticker = time.NewTicker(time.Duration(60) * time.Second)
+	go func() {
+		for {
+			select {
+			case message, ok := <-ac.c:
+				if ok {
+					ac.insertMessage(&message)
+				} else {
+					continue
+				}
+			case <-ac.ticker.C:
+				ac.mu.Lock()
+				ac.flushBuffer()
+				ac.mu.Unlock()
+			}
+
+		}
+	}()
+
+	ac.Consumer.SubscribeTopics([]string{topic}, nil)
+	for {
+		msg, err := ac.Consumer.ReadMessage(-1)
+		if err == nil {
+			d := data.Data{}
+			utils.FromBytes(&d, msg.Value)
+
+			d.MakeData()
+			ac.c <- d
+		} else {
+			// The client will automatically try to recover from all errors.
+			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
+		}
+	}
+}
+func KafKaConsumer(cfg *kafka.ConfigMap) *kafka.Consumer {
+	consumer := APIDataConsumer(cfg)
+	return consumer
+}
+
+func APIDataConsumer(cfg *kafka.ConfigMap) *kafka.Consumer {
+	consumer, err := kafka.NewConsumer(cfg)
+	if err != nil {
+		panic(err)
+	}
+	return consumer
 }
