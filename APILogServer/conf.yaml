@@ -9,6 +9,7 @@ kafka:
   groupid:          "myGroup"
   autooffsetreset: "earliest"
   maxBufSize: 10
+  flushTickerSec: 60
 
 mysql:
   host: "mysql"

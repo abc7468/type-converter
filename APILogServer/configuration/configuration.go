@@ -20,6 +20,7 @@ type KafkaConf struct {
 	GroupId          string `yaml:"groupId"`
 	AutoOffsetReset  string `yaml:"autoOffsetReset"`
 	MaxBufSize       int    `yaml:"maxBufSize"`
+	FlushTickerSec   int    `yaml:"flushTickerSec"`
 }
 type DbConf struct {
 	Host     string `yaml:"host"`

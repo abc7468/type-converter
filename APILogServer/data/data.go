@@ -10,6 +10,7 @@ import (
 	"github.com/clbanning/mxj/v2"
 )
 
+// 프로젝트에서 사용할 데이터 필드입니다.
 type Data struct {
 	Body        string `json:"body"`
 	Format      string `json:"format"`
@@ -19,6 +20,7 @@ type Data struct {
 	Time        time.Time
 }
 
+// Data 구조체를 초기화 하는 함수입니다.
 func (d *Data) MakeData() error {
 	err := d.toMap()
 	if err != nil {
@@ -32,11 +34,9 @@ func (d *Data) MakeData() error {
 	return nil
 }
 
+//
 func (d *Data) makeProductInfo() error {
 	var product string
-	// var id string
-	// var name string
-	// var price string
 	for _, p := range configuration.Conf.Field.Product {
 		if _, ok := d.Original[p]; ok {
 			product = p

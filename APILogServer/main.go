@@ -11,6 +11,7 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
+// 유틸성이 좋은 viper를 통해 configuration을 초기화 합니다.
 func setConf(profile string) {
 	viper.AddConfigPath(".")
 	viper.SetConfigName(profile)
@@ -24,8 +25,8 @@ func setConf(profile string) {
 		panic(err)
 	}
 
-	// kafka.yaml 파일의 수정이 발생할 경우 Conf 재 설정.
-	// 새로운 API가 생겨날 때 재 시작하지 않고 바로 수정 가능.
+	// kafka.yaml 파일의 수정이 발생할 경우 Conf 재 설정합니다.
+	// 새로운 API가 생겨날 때 재 시작하지 않고 바로 수정을 하도록 합니다.
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Println("Config file changed:", e.Name)
 		var err error
