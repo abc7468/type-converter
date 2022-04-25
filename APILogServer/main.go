@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"sixshop/apilog/configuration"
-	"sixshop/apilog/mq"
+	"sixshop/apilog/consumer"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -45,14 +45,14 @@ func setConf(profile string) {
 
 }
 
-func setConsumer() *mq.ApiDataConsumer {
+func setConsumer() *consumer.ApiDataConsumer {
 	cfg := &kafka.ConfigMap{
 		"bootstrap.servers": configuration.Conf.Kafka.BootstrapServers,
 		"group.id":          configuration.Conf.Kafka.GroupId,
 		"auto.offset.reset": configuration.Conf.Kafka.AutoOffsetReset,
 	}
-	c := &mq.ApiDataConsumer{
-		Consumer: mq.KafKaConsumer(cfg),
+	c := &consumer.ApiDataConsumer{
+		Consumer: consumer.KafKaConsumer(cfg),
 	}
 	return c
 }

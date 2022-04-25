@@ -1,4 +1,4 @@
-package mq
+package consumer
 
 type Consumer interface {
 	Consume()
