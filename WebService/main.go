@@ -13,7 +13,6 @@ func main() {
 	p := &kafkasvc.Producer{
 		Producer: configuration.KafKaProducer(),
 	}
-	p.Print()
 
 	app := app.App{}
 	app.P = p

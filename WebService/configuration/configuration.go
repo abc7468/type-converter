@@ -7,7 +7,7 @@ import (
 )
 
 func KafKaProducer() *kafka.Producer {
-	cfg := kafka.ConfigMap{"bootstrap.servers": "172.17.170.151:29092"}
+	cfg := kafka.ConfigMap{"bootstrap.servers": "broker:29092"}
 	producer := kafkasvc.APIDataProducer(cfg)
 	return producer
 }

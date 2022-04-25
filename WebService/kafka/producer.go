@@ -28,9 +28,8 @@ func (p *Producer) Print() {
 }
 
 func (p *Producer) Produce(data *data.Data) {
-	topic := "myTopic"
+	topic := "api"
 	dataByte := utils.ToBytes(data)
-	fmt.Println(&p.Producer)
 	err := p.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          dataByte,
